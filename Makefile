@@ -1,6 +1,4 @@
-all: \
-	out.js \
-	dist/browser-elm-compiler.js
+all: dist/browser-elm-compiler.min.js
 
 elm-compiler:
 	git clone https://github.com/elm-lang/elm-compiler.git
@@ -11,16 +9,16 @@ elm-package:
 	cd elm-package && git checkout 0.18.0 && patch -p1 < ../patch/elm-package.diff
 
 out.js: src/*.hs
-	stack build
+	PATH=~/.stack/programs/x86_64-osx/ghc-7.10.3/bin:$$PATH stack build
 
-dist/browser-elm-compiler.js: src/*.hs js/export.js
+dist/browser-elm-compiler.js: src/*.hs js/worker-interface.js
 	cat \
-		js/prelude.js \
-		`stack path --dist-dir`/build/browser-elm-compiler-exe/browser-elm-compiler-exe.jsexe/rts.js \
-		`stack path --dist-dir`/build/browser-elm-compiler-exe/browser-elm-compiler-exe.jsexe/lib.js \
-		`stack path --dist-dir`/build/browser-elm-compiler-exe/browser-elm-compiler-exe.jsexe/out.js \
-		js/export.js \
+		`stack path --dist-dir`/build/browser-elm-compiler-exe/browser-elm-compiler-exe.jsexe/all.js \
+		js/worker-interface.js \
 		> $@
+
+dist/browser-elm-compiler.min.js: dist/browser-elm-compiler.js
+	node_modules/.bin/uglifyjs --toplevel --compress --mangle --output dist/browser-elm-compiler.min.js -- dist/browser-elm-compiler.js
 
 clean:
 	rm -rf .cabal-sandbox
